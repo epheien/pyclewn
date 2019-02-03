@@ -67,8 +67,7 @@ def vimball():
            ]
 
     # Create version.vim.
-    version = __version__ + '.' + subprocess.check_output(
-                    ['hg',  'id',  '-i'], universal_newlines=True)
+    version = __version__
     with open('runtime/autoload/pyclewn/version.vim', 'w') as f:
         f.write(VERSION_FUNC % version.rstrip('+\n'))
 
@@ -104,4 +103,4 @@ def main():
     vimball()
 
 if __name__ == '__main__':
-        main()
+    main()
