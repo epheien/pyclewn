@@ -63,19 +63,32 @@ def exec_vimcmd(commands, editor='', error_stream=None):
     if not editor:
         editor = os.environ.get('EDITOR', 'gvim')
 
-    args = [editor, '-u', 'NONE', '-esX', '-c', 'set cpo&vim']
-    fd, tmpname = tempfile.mkstemp(prefix='vimcmd', suffix='.clewn')
-    commands.insert(0,  'redir! >%s' % tmpname)
-    commands.append('quit')
+    args = [
+        editor,
+        '-i', 'NONE',
+        '-u', 'NONE',
+        '-U', 'NONE',
+        '-V1',
+        '-nNes',
+        '-c', 'set cpo&vim',
+    ]
+
     for cmd in commands:
         args.extend(['-c', cmd])
 
-    output = f = None
+    # last
+    args += ['-c', 'echo""|qall!']
+
+    output = None
     try:
         try:
-            subprocess.Popen(args).wait()
-            f = os.fdopen(fd)
-            output = f.read()
+            p = subprocess.Popen(args,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
+            output, err = p.communicate(timeout=5)
+            if isinstance(output, bytes):
+                output = output.decode()
+            assert p.poll() == 0, p.poll()
         except (OSError, IOError) as err:
             if isinstance(err, OSError) and err.errno == errno.ENOENT:
                 perror("Failed to run '%s' as Vim.\n" % args[0])
@@ -86,12 +99,7 @@ def exec_vimcmd(commands, editor='', error_stream=None):
                 perror("Error; %s\n", err)
             raise
     finally:
-        if f is not None:
-            f.close()
-        try:
-            os.unlink(tmpname)
-        except OSError:
-            pass
+        pass
 
     if not output:
         raise ClewnError(
