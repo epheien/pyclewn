@@ -497,7 +497,7 @@ class Gdb(debugger.Debugger, Process):
         self.time = None
         self.multiple_choice = 0
         self.cmd_fifo = collections.deque()
-        self.async = False
+        self._async = False
         self.project = ''
         self.foldlnum = None
         self.parse_paramlist(self.vim.options.gdb)
@@ -507,7 +507,7 @@ class Gdb(debugger.Debugger, Process):
         """Process the class parameter list."""
         for param in [x.strip() for x in parameters.split(',') if x]:
             if param.lower() == 'async':
-                self.async = True
+                self._async = True
                 continue
 
             pathname = os.path.expanduser(param)
@@ -872,7 +872,7 @@ class Gdb(debugger.Debugger, Process):
         if method == self.cmd_sigint:
             self.lastcmd = ''
 
-        if not self.async:
+        if not self._async:
             debugger.Debugger._do_cmd(self, method, cmd, args)
             return
 
