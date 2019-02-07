@@ -1,3 +1,4 @@
+# coding: utf-8
 # vi:set ts=8 sts=4 sw=4 et tw=80:
 """
 A Vim instance instantiates a Debugger and controls the netbeans socket.
@@ -24,6 +25,7 @@ import threading
 import atexit
 import platform
 import tempfile
+import shlex
 
 from . import (__version__, ClewnError, misc, netbeans, tty,
                gdb, debugger)
@@ -78,6 +80,8 @@ def exec_vimcmd(commands, editor='', error_stream=None):
 
     # last
     args += ['-c', 'echo""|qall!']
+
+    debug('Vim output for command: %s', ' '.join(map(shlex.quote, args)))
 
     output = None
     try:
@@ -232,6 +236,7 @@ def main(testrun=False):
         # run as 'gvim'.
         if (options.editor and vim.module == 'gdb' and not testrun and
                     os.isatty(sys.stdin.fileno()) and not options.daemon):
+            # FIXME: 现在的机制下，无法正确检测 has("gui_running")
             out = exec_vimcmd(['echo has("gui_running")'],
                                  options.editor, vim.stderr_hdlr).strip()
             if out == '1':
@@ -240,6 +245,7 @@ def main(testrun=False):
                 vim_tasks.extend(tasks)
 
         vim_tasks.append(asyncio.Task(vim.run(), loop=vim.loop))
+        debug(vim_tasks)
         misc.cancel_after_first_completed(vim_tasks, lambda: vim.signal(None),
                                           loop=vim.loop)
 
@@ -315,7 +321,7 @@ class Vim(object):
             self.loop.set_debug(True)
         return self.loop
 
-    def vim_version(self):
+    def check_vim_version(self):
         """Check Vim version."""
         # test if Vim contains the netbeans 'remove' fix
         # test if Vim contains the netbeans 'getLength' fix
@@ -391,7 +397,7 @@ class Vim(object):
         self.clazz = getattr(module, class_name)
         self.debugger = self.clazz(self)
 
-        self.vim_version()
+        self.check_vim_version()
         if self.options.editor:
             self.spawn_vim()
         else:
