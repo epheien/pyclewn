@@ -8,6 +8,8 @@ if exists("s:did_start")
     finish
 endif
 let s:did_start = 1
+let s:file = expand("<sfile>:p")
+let s:dir = fnamemodify(s:file, ':p:h')
 
 " The following global variables define how pyclewn is started. They may be
 " changed to suit your preferences.
@@ -21,7 +23,11 @@ function s:init(debugger)
     if exists("g:pyclewn_python")
         let s:python = g:pyclewn_python
     else
-        let s:python = "python"
+        if has('python3')
+            let s:python = "python3"
+        else
+            let s:python = "python"
+        endif
     endif
 
     if exists("g:pyclewn_args")
@@ -140,7 +146,11 @@ function s:start(args, pdb_attach)
     else
         call s:info("Starting pyclewn.\n")
     endif
-    let l:run_pyclewn = s:python . " -m clewn " . s:fixed . l:tmpfile . " " . a:args
+    "let l:run_pyclewn = s:python . " -m clewn " . s:fixed . l:tmpfile . " " . a:args
+    let prog = fnamemodify(s:dir, ':h:h') . '/pyclewn'
+    let l:run_pyclewn = printf("%s %s %s %s",
+        \ s:python, prog, s:fixed . l:tmpfile, a:args)
+    "echomsg l:run_pyclewn
     if s:terminal == ""
         exe "silent !" . l:run_pyclewn . " &"
     else

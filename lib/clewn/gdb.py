@@ -575,6 +575,7 @@ class Gdb(debugger.Debugger, Process):
     def start(self):
         """Start gdb."""
         self.console_print('\n')
+        debug(self.getargv())
         Process.start(self, self.getargv())
 
     def print_prompt(self):

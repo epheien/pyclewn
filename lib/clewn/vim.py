@@ -412,7 +412,7 @@ class Vim(object):
         self.closed = True
 
         while self.events and not self.events.empty():
-            event = self.events. get_nowait()
+            event = self.events.get_nowait()
             warning('pending event at shutdown: %s', event)
 
         # Remove the Vim script file in case the script failed to remove itself.
